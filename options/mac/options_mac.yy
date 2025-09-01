@@ -2,7 +2,7 @@
   "resourceType": "GMMacOptions",
   "resourceVersion": "1.0",
   "name": "macOS",
-  "option_mac_display_name": "Note Block Studio",
+  "option_mac_display_name": "Note Block Studio Zombe",
   "option_mac_app_id": "org.opennbs.onbs",
   "option_mac_version": "3.12.0",
   "option_mac_build_number": 0,

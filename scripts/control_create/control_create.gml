@@ -16,7 +16,7 @@ function control_create() {
 	#macro NOT_RUN_FROM_IDE !string_count("GMS2TEMP", get_execution_command()) // THIS CONSTANT IS A REVERSE BOOLEAN (0 is from IDE)
 	//show_message(get_execution_command() + "IDE: " + string(NOT_RUN_FROM_IDE))
 	p_num = parameter_count();
-	isplayer = (check_args("-player"));
+	isplayer = 1
 	filenamearg = check_args();
 	for (var i = 0; i < p_num; i += 1) {
 		if (parameter_string(i) = "-player" || parameter_string(i) == "--protocol-launcher") isplayer = 1
@@ -54,9 +54,12 @@ function control_create() {
 	window_set_min_height(500)
 	if (os_browser != browser_not_a_browser) window_set_size(browser_width - 5, browser_height - 5)
 	window_scale = get_default_window_scale()
+	is_yyc = code_is_compiled()
 	if (os_type = os_macosx){
-		if (window_scale > 1.1) window_scale = 2
-	    else window_scale = 1
+		if (is_yyc) {
+			if (window_scale > 1.1) window_scale = 2
+		    else window_scale = 1
+		} else window_scale = 1
 	}
 	if (window_scale > 2 && is_mobile()) window_scale = 2
 	var temp_font_size = floor(15 * window_scale * (1 + (os_type != os_macosx || window_scale = 1)))
@@ -160,7 +163,7 @@ function control_create() {
 	show_welcome = 1
 	scroll_wheel = 0
 	theme = 3 // Using Fluent as the default theme
-	fdark = 0 // Fluent dark mode
+	fdark = 1 // Fluent dark mode
 	blackout = 0
 	editmode = 0
 	clickinarea = 0
@@ -202,7 +205,6 @@ function control_create() {
 	logs_overlay = check_args("--logs")
 	debug_option = 0
 	os_info = os_get_info()
-	is_yyc = code_is_compiled()
 	if (is_yyc) output_format = "Native"
 	else output_format = "VM"
 	volume_scroll = 0
@@ -313,15 +315,6 @@ function control_create() {
 	    recent_song[a] = ""
 	    recent_song_time[a] = 0
 	}
-	//timesignature = 4
-	//randomise()
-	//song_backupid = string(floor(random(800000)))
-	//song_backupname = "Unsaved song " + song_backupid + ".nbs"
-	if (!directory_exists_lib(backup_directory)) {
-		directory_create_lib(backup_directory);
-	}
-	file_dnd_set_hwnd(hwnd_main)
-	file_dnd_set_enabled(true)
 	dndfile = ""
 	lastfile = ""
 	menutab = -1
@@ -504,7 +497,7 @@ function control_create() {
 	tapdouble = 0 // Set to double tempo?
 	percentvel = 0
 	addpitch = 0
-	dropmode = 0
+	dropmode = 1
 	dropalpha = 1
 	dropalphawait = 0
 	draw_set_circle_precision(64);
@@ -588,16 +581,15 @@ function control_create() {
 	save_version = nbs_version
 
 	// Settings
-	if (!check_args("--prefreset")) load_settings()
+	//if (!check_args("--prefreset")) load_settings()
 	if (os_type = os_macosx) macos_enable_system_settings_menu()
 	tonextsave = autosave ? autosavemins : 0; // Defining autosavemins here to avoid the autosave when the first song is loaded after open the game.
-	menu_macos_init()
+	//menu_macos_init()
 	switch(language) {
 		default:
 			lang_en_us()
 	}
-	if (channelstoggle) channels = 1024
-	else channels = 256
+	channels = 1024
 	audio_channel_num(channels)
 	if (acrylic_successful) {
 		if (acrylic) {
@@ -626,56 +618,32 @@ function control_create() {
 		if (window_scale > 2 && is_mobile()) window_scale = 2
 		hires = (window_scale > 1.25)
 	}
-	if (show_welcome) window = w_greeting
+	//window = w_greeting
 	draw_accent_init()
-	if (isplayer) window_set_size(floor(800 * window_scale), floor(500 * window_scale))
-	window_set_min_width(800 * window_scale)
-	window_set_min_height(500 * window_scale)
+	if (isplayer) {
+		if (os_type != os_macosx) {
+			window_set_size(floor(1024 * window_scale), floor(768 * window_scale))
+			window_set_min_width(1024 * window_scale)
+			window_set_min_height(768 * window_scale)
+		}
+		else {
+			window_set_size(floor(1024), floor(768))
+			window_set_min_width(1024)
+			window_set_min_height(768)
+		}
+	}
 	if ((theme = 3 && fdark) || theme = 2) window_set_darkmode()
 	if (keynames_flat) keynames = ["A", "Bb", "B", "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab"]
-	
-	if (current_resource != "Vanilla") {
-		set_resourcepack(current_resource)
-	}
 
-	if (date_compare_date(date_current_datetime(), donate_banner_time) > 0) {
-		donate_banner = 1
-	} else {
-		donate_banner = 0
-	}
+	donate_banner = 0
 
 	// Updates
-	if (check_update)
-		if (check_prerelease) {
-			update_http = http_get(link_releases)
-		} else {
-			update_http = http_get(link_latest)
-		}
-	else
-	    update_http = -1
+	update_http = -1
 	update_download = -1
 	downloaded_size = 0
 	total_size = -1
 	changelogstr = load_text(data_directory + "changelog.txt")
 	creditsstr = load_text(data_directory + "credits.txt")
-	if (file_exists_lib(settings_file) && vers != version) {
-		if (theme = 2) fdark = 1
-		theme = 3 // Sets to the Fluent theme when updated
-	    window = w_update
-	    update_success = 1
-		donate_banner = 1 // Enable donate banner after each update
-		if (os_type != os_windows) {
-			execute_program("cp", @'-fR "' + filename_dir(bundled_data_directory) + @'" "' + filename_dir(data_directory) + @'"', true)
-			execute_program("cp", @'-fR "' + filename_dir(bundled_songs_directory) + @'" "' + filename_dir(songs_directory) + @'"', true)
-			execute_program("cp", @'-fR "' + filename_dir(bundled_pattern_directory) + @'" "' + filename_dir(pattern_directory) + @'"', true)
-		} else {
-		    execute_program("Xcopy", @'/E /I /Y "' + filename_dir(bundled_data_directory) + @'" "' + filename_dir(data_directory) + @'"', true)
-		    execute_program("Xcopy", @'/E /I /Y "' + filename_dir(bundled_songs_directory) + @'" "' + filename_dir(songs_directory) + @'"', true)
-		    execute_program("Xcopy", @'/E /I /Y "' + filename_dir(bundled_pattern_directory) + @'" "' + filename_dir(pattern_directory) + @'"', true)
-		}
-	}
-	
-	if (os_type = os_ios) recent_song[0] = bundled_songs_directory + "the_ground's_colour_is_yellow.nbs"
 	
 	// Download song
 	protocol_data = pointer_null;
@@ -684,137 +652,13 @@ function control_create() {
 	song_total_size = -1
 	song_download_status = 0
 	song_download_file = ""
-
-	// Delete old installer
-	if (file_exists_lib(update_file)) {
-		files_delete_lib(update_file)
-	}
-	
-	// Register as nbs:// url protocol handler
-	if (os_type = os_windows) register_url_protocol()
 	
 	// Init wallpaper
 	change_theme()
 
-	// Auto-recovery
-	// PREVIOUSLY DISABLED DUE TO https://github.com/OpenNBS/OpenNoteBlockStudio/issues/196
-	// Implemented in a better way that takes multiple instances into account.
-	//if (!port_taken && !isplayer) {
-	//	if (file_find_first(backup_file + "*_backup.nbs", 0) != "") {
-	//		if (question("Minecraft Note Block Studio quit unexpectedly while you were working on a song. Do you want to recover your work?", "Auto-recovery")) {
-	//			open_url(backup_file)
-	//		}
-	//	} else if (file_find_first(backup_file + "*_unsaved.nbs", 0) != "") {
-	//		if (question("Minecraft Note Block Studio detected you closed the window without saving the song in the last session. Do you want to recover your work?", "Auto-recovery")) {
-	//			open_url(backup_file)
-	//		}
-	
-	if (os_type = os_macosx && macos_url_pending_count() > 0) {
-		var temp_url = macos_url_take_pending();
-		if (string_count("nbs://", temp_url) = 0) {
-			var file = string_replace_all(temp_url, "file://", "");
-			if (file != "" && 
-				(string_lower(filename_ext(file)) == ".mid" || string_lower(filename_ext(file)) == ".midi" || string_lower(filename_ext(file)) == ".schematic" ||
-				string_lower(filename_ext(file)) == ".nbs" || string_lower(filename_ext(file)) == ".zip")) {
-				songs[song].filename = file;
-				songs[song].file_ext = file_ext;
-				load_song(file, 0, 1, 1);
-			}
-		} else {
-			isplayer = 1
-			window_set_size(floor(800 * window_scale), floor(500 * window_scale))
-			protocol_data = temp_url
-		}
-	}
-	
-	if (file_find_first(backup_directory + "*.nbs", 0) != "" && !port_taken && !isplayer) {
-		var isrecover = 0
-		if (language != 1) isrecover = question("Note Block Studio quit unexpectedly while you were working on a song. Do you want to recover your work?\n\n(If you click 'No', you'll be prompted to recover it again the next time you open the program.)", "Auto-recovery")
-		else isrecover = question("Note Block Studio在您工作时意外关闭了。要恢复您的文档吗？\n\n（如果点击“No”，下次打开软件时将会再次提示恢复。）", "自动恢复")
-		if (isrecover) {
-			// Create restore folder
-			if (!directory_exists_lib(restore_directory)) {
-				directory_create_lib(restore_directory);
-			}
-			
-			// Copy files to a new, safe location
-			var file_to_restore = file_find_first(backup_directory + "*.nbs", 0);
-			var restored_count = 0;
-			while (file_to_restore != "") {
-				files_copy_lib(backup_directory + file_to_restore, restore_directory + file_to_restore);
-				restored_count += 1;
-				file_to_restore = file_find_next();
-			}
-			file_find_close();
-			
-			// Delete original songs (only after everything has been copied!)
-			var file_to_delete = file_find_first(backup_directory + "*.nbs", 0);
-			while (file_to_delete != "") {
-				files_delete_lib(backup_directory + file_to_delete)
-				file_to_delete = file_find_next();
-			}
-			file_find_close();
-			
-			// Open restore folder
-			if (language != 1) message(string(restored_count) + " " + condstr(restored_count > 1, "files have been restored.", "file has been restored."), "Auto-recovery");
-			else message(string(restored_count) + "个文件已恢复。", "自动恢复");
-			open_url(restore_directory);
-		}
-	}
-
-	// Parse command line arguments
-	var p_num = parameter_count();
-	if (p_num > 1) {
-		for (var i = 1; i <= p_num; i++) {
-			var arg = parameter_string(i);
-			
-			if (arg == "-player") continue;
-			if (arg == "-game" || string_count("\\GMS2TEMP\\", arg) > 0) continue; // GMS runner
-			
-			// URL protocol
-			if (arg == "--protocol-launcher") {
-				if (p_num >= i + 1) {
-					protocol_data = parameter_string(i + 1);
-				}
-			
-			// File drop, etc.
-			} else if (string_replace(arg, " ", "") != "") {
-				log("Opening song from argument, arg: " + arg)
-				filenamearg = arg;
-				song_backupname = filename_name(filename_change_ext(filenamearg, ".nbs"));
-			}
-			
-		}
-	}
-	
-	var args = ""
-	for (var i = 0; i <= parameter_count(); i++) {
-		args = args + parameter_string(i) + " ";
-	}
-	log("Run with command line args: " + args);
-	
-	// Download song
-	if (protocol_data != pointer_null) {
-		var download_url = string_replace(protocol_data, "nbs://", "")
-		download_url = string_replace(download_url, "https//", "https://") // Re-add : stripped from URL
-		download_url = string_replace(download_url, "http//", "http://")
-		download_song_start(download_url)
-	}
-	// Open song
-	if (os_type != os_macosx && p_num > 0) {
-		songs[song].filename = filenamearg;
-		if (songs[song].filename != "" &&
-			(string_lower(filename_ext(songs[song].filename)) == ".mid" || string_lower(filename_ext(songs[song].filename)) == ".midi" ||
-			string_lower(filename_ext(songs[song].filename)) == ".schematic" || string_lower(filename_ext(songs[song].filename)) == ".nbs" ||
-			string_lower(filename_ext(songs[song].filename)) == ".zip")) {
-			if (!port_taken) {
-				load_song(songs[song].filename, 0, 1, 1)
-			}
-		}
-		else songs[song].filename = ""
-	}
-
 	log("Startup OK")
+	
+	load_song(songs_directory + "Watery_Graves.nbs", 0, 1, 0)
 	
 	}
 

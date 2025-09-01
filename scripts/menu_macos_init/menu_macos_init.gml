@@ -1,6 +1,6 @@
 function menu_macos_init(){
 	var str, a, b, c;
-	if (os_type = os_macosx) {
+	if (false) {
 		macos_menu_clear()
 		var current_song = songs[song]
 		if (language != 1) {
